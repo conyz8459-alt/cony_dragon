@@ -4,412 +4,195 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>lhy和zkn的云基地 🧸</title>
+    <!-- 引入 Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-    /* ================= 基础样式重置 ================= */
-    :root {
-        --primary-color: #ff6b81; /* 主题粉色 */
-        --hover-color: #ff4757;
-        --bg-color: #f9f7f3;
-        --text-color: #444;
-        --shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-    }
-
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-    }
-
-    body {
-        font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
-        background-color: var(--bg-color);
-        color: var(--text-color);
-        overflow-x: hidden;
-        line-height: 1.6;
-    }
-
-    /* ================= 导航栏样式 ================= */
-    header {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 70px;
-        background-color: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-        z-index: 1000;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-
-    .header-inner {
-        width: 90%;
-        max-width: 1200px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .logo {
-        font-size: 1.4rem;
-        font-weight: bold;
-        color: var(--primary-color);
-        letter-spacing: 1px;
-    }
-
-    .nav-list {
-        display: flex;
-        list-style: none;
-        gap: 20px;
-    }
-
-    .nav-item a {
-        text-decoration: none;
-        color: #555;
-        font-size: 1rem;
-        padding: 8px 16px;
-        border-radius: 20px;
-        transition: all 0.3s ease;
-        font-weight: 500;
-    }
-
-    .nav-item a.active {
-        background-color: var(--primary-color);
-        color: white;
-        box-shadow: 0 2px 8px rgba(255, 107, 129, 0.3);
-    }
-
-    .nav-item a:hover:not(.active) {
-        color: var(--primary-color);
-        background-color: rgba(255, 107, 129, 0.1);
-    }
-
-    /* ================= 板块通用逻辑 ================= */
-    .section {
-        display: none;
-        min-height: 100vh;
-        animation: fadeIn 0.5s ease-in-out;
-    }
-
-    .section.active {
-        display: block;
-    }
-
-    .content-section {
-        padding-top: 100px; 
-        padding-bottom: 50px;
-        max-width: 1200px;
-        margin: 0 auto;
-        width: 90%;
-    }
-
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    h2 {
-        text-align: center;
-        font-size: 2rem;
-        color: #333;
-        margin-bottom: 40px;
-        position: relative;
+    /* ================= 基础样式优化 ================= */
+    :root { 
+        --primary-color: #ff6b81; 
+        --hover-color: #ff4757; 
+        --bg-color: #fcfcfc; /* 更干净的背景色 */
+        --text-color: #4a4a4a; 
+        --card-bg: #ffffff;
+        --shadow: 0 10px 30px rgba(0, 0, 0, 0.05); /* 更柔和的高级阴影 */
     }
     
-    h2::after {
-        content: '';
-        display: block;
-        width: 60px;
-        height: 3px;
-        background-color: var(--primary-color);
-        margin: 15px auto 0;
-        border-radius: 2px;
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body { 
+        font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif; 
+        background-color: var(--bg-color); 
+        color: var(--text-color); 
+        overflow-x: hidden; 
+        line-height: 1.8; /* 增加行高，让文字不拥挤 */
+        font-size: 16px;
+    }
+    
+    /* 导航栏 */
+    header { 
+        position: fixed; top: 0; left: 0; width: 100%; height: 70px; 
+        background-color: rgba(255, 255, 255, 0.85); 
+        backdrop-filter: blur(12px); /* 毛玻璃效果更强 */
+        box-shadow: 0 1px 15px rgba(0, 0, 0, 0.03); 
+        z-index: 1000; 
+        display: flex; justify-content: center; align-items: center; 
+    }
+    .header-inner { width: 92%; max-width: 1200px; display: flex; justify-content: space-between; align-items: center; }
+    .logo { font-size: 1.5rem; font-weight: 800; color: var(--primary-color); letter-spacing: 1px; }
+    .nav-list { display: flex; list-style: none; gap: 25px; }
+    .nav-item a { 
+        text-decoration: none; color: #666; font-weight: 500; padding: 8px 18px; 
+        border-radius: 25px; transition: all 0.3s ease; 
+    }
+    .nav-item a.active, .nav-item a:hover { 
+        background-color: var(--primary-color); color: white; 
+        box-shadow: 0 4px 12px rgba(255, 107, 129, 0.3); 
     }
 
-    /* ================= 1. 主页样式 ================= */
-    #home {
-        padding: 0 !important;
-        height: 100vh;
-        width: 100%;
-        overflow: hidden;
+    /* 板块通用布局优化 */
+    .section { display: none; min-height: 100vh; animation: fadeIn 0.6s cubic-bezier(0.22, 1, 0.36, 1); }
+    .section.active { display: block; }
+    
+    .content-section { 
+        padding-top: 130px; /* 增加顶部距离，不被导航栏挡住 */
+        padding-bottom: 80px; 
+        max-width: 1000px; /* 限制最大宽度，让内容更聚焦，不松散 */
+        margin: 0 auto; 
+        width: 92%; 
     }
-
-    .home-slider {
+    
+    h2 { 
+        text-align: center; 
+        font-size: 2rem; 
+        margin-bottom: 50px; 
+        color: #333;
         position: relative;
-        width: 100%;
-        height: 100%;
-    }
-
-    .slider-img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        position: absolute;
-        top: 0;
-        left: 0;
-        filter: brightness(0.85);
-    }
-
-    .slider-content {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        text-align: center;
-        z-index: 10;
-        width: 100%;
-        padding: 0 20px;
-    }
-
-    .slider-text {
-        font-size: 2.5rem;
-        color: white;
-        font-weight: bold;
-        text-shadow: 0 2px 10px rgba(0,0,0,0.5);
-        margin-bottom: 40px;
-        line-height: 1.5;
-        letter-spacing: 2px;
-    }
-
-    .music-btn {
-        background-color: var(--primary-color);
-        color: white;
-        border: 2px solid rgba(255,255,255,0.8);
-        padding: 15px 40px;
-        font-size: 1.2rem;
-        border-radius: 50px;
-        cursor: pointer;
-        transition: transform 0.2s, background-color 0.2s;
-        box-shadow: 0 4px 15px rgba(255, 107, 129, 0.5);
-    }
-
-    .music-btn:hover {
-        background-color: var(--hover-color);
-        transform: scale(1.05);
-    }
-
-    /* ================= 2. 收集箱样式 ================= */
-    .intro-card {
-        background: white;
-        padding: 30px;
-        border-radius: 15px;
-        box-shadow: var(--shadow);
-        text-align: center;
-        margin-bottom: 50px;
-        color: #555;
-        font-size: 1.1rem;
-        line-height: 1.8;
-        border-left: 5px solid var(--primary-color);
-    }
-
-    .year-group {
-        margin-bottom: 60px;
-    }
-
-    .year-badge {
         display: inline-block;
-        background-color: var(--primary-color);
-        color: white;
-        padding: 8px 20px;
-        border-radius: 20px 20px 20px 0;
-        font-size: 1.2rem;
-        font-weight: bold;
-        margin-bottom: 20px;
-        box-shadow: 0 4px 10px rgba(255, 107, 129, 0.3);
-    }
-
-    .img-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-        gap: 20px;
-    }
-
-    .img-item {
-        border-radius: 12px;
-        overflow: hidden;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        aspect-ratio: 1 / 1;
-        transition: transform 0.3s ease;
-        background: #fff;
-    }
-
-    .img-item:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 5px 15px rgba(0,0,0,0.15);
-    }
-
-    .img-item img {
         width: 100%;
-        height: 100%;
-        object-fit: cover;
-        transition: transform 0.5s ease;
+    }
+    /* 标题下方的小装饰线 */
+    h2::after {
+        content: ''; display: block; width: 50px; height: 4px; 
+        background: var(--primary-color); margin: 15px auto 0; 
+        border-radius: 2px; opacity: 0.6;
+    }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* 主页 */
+    #home { padding: 0 !important; height: 100vh; width: 100%; }
+    .home-slider, .slider-img { width: 100%; height: 100%; object-fit: cover; }
+    .slider-img { position: absolute; top: 0; left: 0; }
+    .slider-content { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; z-index: 10; width: 100%; }
+    .slider-text { 
+        font-size: 3rem; color: white; font-weight: bold; margin-bottom: 50px; 
+        text-shadow: 0 4px 20px rgba(0,0,0,0.3); letter-spacing: 2px; 
+    }
+    .music-btn { 
+        background: var(--primary-color); color: white; 
+        border: none; padding: 16px 45px; font-size: 1.1rem; 
+        border-radius: 50px; cursor: pointer; transition: all 0.3s;
+        box-shadow: 0 8px 20px rgba(255, 107, 129, 0.4);
+        font-weight: bold;
+    }
+    .music-btn:hover { transform: translateY(-3px) scale(1.02); background: var(--hover-color); box-shadow: 0 12px 25px rgba(255, 107, 129, 0.5); }
+
+    /* 相册 - 增加留白 */
+    .upload-area { 
+        background: var(--card-bg); padding: 40px; border-radius: 25px; 
+        box-shadow: var(--shadow); text-align: center; margin-bottom: 60px; 
+    }
+    .year-badge { 
+        background: #fff; color: var(--primary-color); border: 2px solid var(--primary-color);
+        padding: 6px 20px; border-radius: 30px; display: inline-block; 
+        margin: 30px 0 20px; font-weight: bold; font-size: 1.1rem;
+    }
+    .img-grid { 
+        display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); 
+        gap: 20px; /* 增加图片间距 */
     }
     
-    .img-item:hover img {
-        transform: scale(1.1);
+    .img-item { 
+        aspect-ratio: 1; overflow: hidden; border-radius: 15px; 
+        background: #fff; position: relative; cursor: zoom-in;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: transform 0.3s;
     }
+    .img-item:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+    .img-item img { width: 100%; height: 100%; object-fit: cover; transition: 0.5s; }
+    
+    .delete-btn {
+        position: absolute; top: 10px; right: 10px;
+        background: rgba(255, 255, 255, 0.9); color: #ff4757;
+        border: none; width: 32px; height: 32px; border-radius: 50%;
+        cursor: pointer; z-index: 5; font-size: 18px;
+        display: flex; align-items: center; justify-content: center;
+        opacity: 0; transition: all 0.3s; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .img-item:hover .delete-btn { opacity: 1; }
+    @media (hover: none) { .delete-btn { opacity: 1; } }
 
-    /* ================= 3. 信件样式 ================= */
-    .letter-paper {
-        background-color: #fff;
-        background-image: linear-gradient(#f1f1f1 1px, transparent 1px);
-        background-size: 100% 2em;
-        width: 100%;
-        max-width: 900px;
-        margin: 0 auto;
-        padding: 40px 60px;
-        box-shadow: 0 0 20px rgba(0,0,0,0.05);
+    /* 灯箱 */
+    .lightbox {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.92); display: none; 
+        justify-content: center; align-items: center; z-index: 2000; cursor: zoom-out;
+    }
+    .lightbox.active { display: flex; animation: fadeIn 0.3s; }
+    .lightbox img { max-width: 90%; max-height: 90%; border-radius: 8px; box-shadow: 0 0 30px rgba(0,0,0,0.5); cursor: default; }
+    .close-lightbox { position: absolute; top: 30px; right: 40px; color: white; font-size: 50px; cursor: pointer; opacity: 0.8; transition: 0.2s; }
+    .close-lightbox:hover { opacity: 1; }
+
+    /* 信件 - 优化纸张质感 */
+    .letter-paper { 
+        background: #fff linear-gradient(#f3f3f3 1px, transparent 1px) 0 0 / 100% 2.4em; /* 调整线条间距 */
+        padding: 60px; /* 增加内边距 */
+        font-family: 'KaiTi', 'STKaiti', serif; 
+        font-size: 1.2rem; /* 字体加大 */
+        line-height: 2.4em; /* 与线条对其 */
+        white-space: pre-wrap; 
+        box-shadow: 0 15px 40px rgba(0,0,0,0.06); 
         border-radius: 5px;
-        font-size: 1.1rem;
-        line-height: 2em;
-        color: #444;
-        white-space: pre-wrap;
-        font-family: 'KaiTi', '楷体', 'STKaiti', serif;
-    }
-
-    /* ================= 4. 礼物/游戏板块样式 ================= */
-    .game-area {
-        background: white;
-        border-radius: 20px;
-        padding: 40px;
-        box-shadow: var(--shadow);
-        text-align: center;
-        max-width: 800px;
-        margin: 0 auto;
+        color: #2c3e50;
         position: relative;
-        z-index: 2;
+    }
+    /* 信纸顶部装饰 */
+    .letter-paper::before {
+        content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 8px;
+        background: repeating-linear-gradient(45deg, #ff6b81, #ff6b81 10px, #fff 10px, #fff 20px, #7bed9f 20px, #7bed9f 30px, #fff 30px, #fff 40px);
     }
 
-    .game-tips {
-        margin-bottom: 25px;
-        color: #555;
-        font-size: 1.1rem;
-    }
-
-    .memory-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 15px;
-        margin-bottom: 30px;
-        perspective: 1000px;
-    }
-
-    .memory-card {
-        height: 120px;
-        position: relative;
-        transform-style: preserve-3d;
-        transition: transform 0.5s;
-        cursor: pointer;
-    }
-
-    .memory-card.flip {
-        transform: rotateY(180deg);
-    }
-
-    .front-face, .back-face {
-        width: 100%;
-        height: 100%;
-        padding: 10px;
-        position: absolute;
-        border-radius: 10px;
-        backface-visibility: hidden;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 3rem;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
-
-    .front-face {
-        transform: rotateY(180deg);
-        background-color: #fff;
-        border: 2px solid var(--primary-color);
-    }
-
-    .back-face {
-        background-color: var(--primary-color);
-        background-image: url('data:image/svg+xml;utf8,<svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="12">❓</text></svg>');
-        background-repeat: repeat;
-    }
-
-    /* ================= 礼物解锁区（核心修改） ================= */
-    .gift-reveal {
-        display: none;
-        position: relative;
-        z-index: 2000; /* 确保在彩带上面 */
-        animation: popUp 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-    }
-
-    .password-card {
-        background: rgba(255, 255, 255, 0.95); /* 增加不透明度 */
-        backdrop-filter: blur(5px);
-        padding: 40px;
-        border-radius: 20px;
-        color: #333;
-        margin-top: 20px;
-        border: 4px solid var(--primary-color);
-        box-shadow: 0 20px 50px rgba(255, 107, 129, 0.3);
-    }
-
-    .password-card h3 {
-        font-size: 1.5rem;
-        margin-bottom: 15px;
-        color: #666;
-    }
-
-    .password-code {
-        font-size: 5rem;
-        font-weight: 900;
-        color: var(--primary-color);
-        letter-spacing: 5px;
-        margin: 30px 0;
-        text-shadow: 3px 3px 0px rgba(0,0,0,0.1);
-        font-family: 'Arial', sans-serif;
-        animation: heartbeat 1.5s infinite;
-    }
-
-    @keyframes popUp {
-        0% { transform: scale(0); opacity: 0; }
-        100% { transform: scale(1); opacity: 1; }
-    }
-
-    @keyframes heartbeat {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.05); }
-        100% { transform: scale(1); }
-    }
-
-    /* 彩带特效 Canvas */
-    #fireworksCanvas {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
-        z-index: 1500; /* 在导航之上，但在密码卡片之下 */
-    }
-
-    /* 手机端适配 */
+    /* 游戏 */
+    .game-area { text-align: center; background: white; padding: 50px; border-radius: 30px; box-shadow: var(--shadow); }
+    .memory-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-top: 30px; max-width: 600px; margin-left: auto; margin-right: auto; }
+    .memory-card { height: 110px; position: relative; transform-style: preserve-3d; transition: 0.5s; cursor: pointer; }
+    .memory-card.flip { transform: rotateY(180deg); }
+    .front-face, .back-face { width: 100%; height: 100%; position: absolute; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; font-size: 2.8rem; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); }
+    .front-face { background: white; transform: rotateY(180deg); border: 2px solid #f0f0f0; }
+    .back-face { background: var(--primary-color); background-image: linear-gradient(135deg, #ff6b81, #ff4757); }
+    .gift-reveal { display: none; margin-top: 40px; animation: popUp 0.8s; }
+    .password-code { font-size: 4rem; color: var(--primary-color); font-weight: 800; margin: 20px 0; letter-spacing: 5px; }
+    
+    #fireworksCanvas { position: fixed; top: 0; left: 0; pointer-events: none; z-index: 2000; }
+    
     @media (max-width: 768px) {
-        .header-inner { flex-direction: column; gap: 10px; }
-        header { height: auto; padding: 10px 0; }
-        .content-section { padding-top: 130px; }
+        .header-inner { flex-direction: column; width: 100%; } 
+        header { height: auto; padding: 15px 0; background: rgba(255,255,255,0.98); } 
+        .content-section { padding-top: 160px; width: 95%; }
         .memory-grid { grid-template-columns: repeat(3, 1fr); }
-        .memory-card { height: 90px; }
-        .letter-paper { padding: 30px 20px; font-size: 1rem; }
-        .password-code { font-size: 3rem; }
+        .letter-paper { padding: 30px; font-size: 1rem; line-height: 2em; background-size: 100% 2em; }
+        .slider-text { font-size: 2rem; }
     }
     </style>
 </head>
 <body>
-
-    <!-- 彩带特效层 -->
     <canvas id="fireworksCanvas"></canvas>
 
-    <!-- 导航栏 -->
+    <!-- 灯箱 -->
+    <div id="lightbox" class="lightbox" onclick="closeLightbox()">
+        <span class="close-lightbox">&times;</span>
+        <img id="lightbox-img" src="" onclick="event.stopPropagation()"> 
+    </div>
+
     <header>
         <div class="header-inner">
             <div class="logo">lhy和zkn的云基地 🧸</div>
@@ -424,127 +207,51 @@
         </div>
     </header>
 
-    <!-- 1. 主页板块 -->
     <section id="home" class="section active">
         <div class="home-slider">
-            <img src="images/home/1.jpg" alt="主页图1" class="slider-img">
-            <img src="images/home/2.jpg" alt="主页图2" class="slider-img" style="display: none;">
-            <img src="images/home/3.jpg" alt="主页图3" class="slider-img" style="display: none;">
-            
+            <!-- 请确保图片路径正确 -->
+            <img src="images/home/1.jpg" class="slider-img" style="display:block">
+            <img src="images/home/2.jpg" class="slider-img" style="display:none">
+            <img src="images/home/3.jpg" class="slider-img" style="display:none">
             <div class="slider-content">
-                <div class="slider-text">
-                    这世界有那么个人<br>
-                    活在我飞扬的青春
-                </div>
+                <div class="slider-text">这世界有那么个人<br>活在我飞扬的青春</div>
                 <button class="music-btn" id="playMusicBtn">点点我吧 🎵</button>
             </div>
-
-            <audio id="bgMusic" loop>
-                <source src="https://music.163.com/song/media/outer/url?id=1933605915.mp3" type="audio/mpeg">
-            </audio>
+            <audio id="bgMusic" loop src="https://music.163.com/song/media/outer/url?id=1933605915.mp3"></audio>
         </div>
     </section>
 
-    <!-- 2. 收集箱板块 -->
     <section id="collection" class="section content-section">
         <h2>我们的回忆收集箱 📦</h2>
-        <div class="intro-card">
-            整理照片的时候发现我们的照片真的发生在天南地北，我宣布你是我社交距离最广的人了😆<br>
-            这里未完待续，要越来越长！！！
-        </div>
-
-        <!-- 2021年 -->
-        <div class="year-group">
-            <div class="year-badge">2021年</div>
-            <div class="img-grid">
-                <div class="img-item"><img src="images/2021/2021-1.jpg" alt="2021"></div>
-                <div class="img-item"><img src="images/2021/2021-2.jpg" alt="2021"></div>
-                <div class="img-item"><img src="images/2021/2021-3.jpg" alt="2021"></div>
-                <div class="img-item"><img src="images/2021/2021-4.jpg" alt="2021"></div>
-                <div class="img-item"><img src="images/2021/2021-5.jpg" alt="2021"></div>
-                <div class="img-item"><img src="images/2021/2021-6.jpg" alt="2021"></div>
-                <div class="img-item"><img src="images/2021/2021-7.jpg" alt="2021"></div>
-                <div class="img-item"><img src="images/2021/2021-8.jpg" alt="2021"></div>
+        <div class="upload-area">
+            <p style="margin-bottom:20px; color:#777;">✨ 天南地北的照片收集箱 ✨<br>可以添删、放大和左右翻看啦，添加或删除照片后稍等一小会即可</p>
+            
+            <div style="display: flex; justify-content: center; gap: 15px; align-items: center; flex-wrap: wrap;">
+                <input type="file" id="uploadInput" accept="image/*" style="display: none;">
+                <button onclick="document.getElementById('uploadInput').click()" class="music-btn" style="padding: 10px 30px; font-size: 1rem; box-shadow:none;">➕ 上传照片</button>
+                
+                <!-- 这里的年份已经更新 -->
+                <select id="yearSelect" style="padding: 12px 20px; border-radius: 30px; border: 2px solid #eee; background: white; font-size: 1rem; outline: none; cursor: pointer;">
+                    <option value="2027年">2027年</option>
+                    <option value="2026年">2026年</option>
+                    <option value="2025年" selected>2025年</option>
+                    <option value="2024年">2024年</option>
+                    <option value="2023年">2023年</option>
+                    <option value="2022年">2022年</option>
+                    <option value="2021年">2021年</option>
+                </select>
             </div>
+            <p id="uploadStatus" style="color: var(--primary-color); margin-top: 15px; font-weight: bold; min-height: 24px;"></p>
         </div>
-        <!-- 2022年 -->
-        <div class="year-group">
-            <div class="year-badge">2022年</div>
-            <div class="img-grid">
-                <div class="img-item"><img src="images/2022/2022-1.jpg" alt="2022"></div>
-                <div class="img-item"><img src="images/2022/2022-2.jpg" alt="2022"></div>
-                <div class="img-item"><img src="images/2022/2022-3.jpg" alt="2022"></div>
-                <div class="img-item"><img src="images/2022/2022-4.jpg" alt="2022"></div>
-                <div class="img-item"><img src="images/2022/2022-5.jpg" alt="2022"></div>
-                <div class="img-item"><img src="images/2022/2022-6.jpg" alt="2022"></div>
-                <div class="img-item"><img src="images/2022/2022-7.jpg" alt="2022"></div>
-            </div>
-        </div>
-        <!-- 2023年 -->
-        <div class="year-group">
-            <div class="year-badge">2023年</div>
-            <div class="img-grid">
-                <div class="img-item"><img src="images/2023/2023-1.jpg" alt="2023"></div>
-                <div class="img-item"><img src="images/2023/2023-2.jpg" alt="2023"></div>
-                <div class="img-item"><img src="images/2023/2023-3.jpg" alt="2023"></div>
-                <div class="img-item"><img src="images/2023/2023-4.jpg" alt="2023"></div>
-            </div>
-        </div>
-        <!-- 2024年 -->
-        <div class="year-group">
-            <div class="year-badge">2024年</div>
-            <div class="img-grid">
-                <div class="img-item"><img src="images/2024/2024-1.jpg" alt="2024"></div>
-                <div class="img-item"><img src="images/2024/2024-2.jpg" alt="2024"></div>
-                <div class="img-item"><img src="images/2024/2024-3.jpg" alt="2024"></div>
-                <div class="img-item"><img src="images/2024/2024-4.jpg" alt="2024"></div>
-                <div class="img-item"><img src="images/2024/2024-5.jpg" alt="2024"></div>
-                <div class="img-item"><img src="images/2024/2024-6.jpg" alt="2024"></div>
-                <div class="img-item"><img src="images/2024/2024-7.jpg" alt="2024"></div>
-                <div class="img-item"><img src="images/2024/2024-8.jpg" alt="2024"></div>
-                <div class="img-item"><img src="images/2024/2024-9.jpg" alt="2024"></div>
-                <div class="img-item"><img src="images/2024/2024-10.jpg" alt="2024"></div>
-                <div class="img-item"><img src="images/2024/2024-11.jpg" alt="2024"></div>
-                <div class="img-item"><img src="images/2024/2024-12.jpg" alt="2024"></div>
-            </div>
-        </div>
-         <!-- 2025年 -->
-         <div class="year-group">
-            <div class="year-badge">2025年</div>
-            <div class="img-grid">
-                <div class="img-item"><img src="images/2025/2025-1.jpg" alt="2025"></div>
-                <div class="img-item"><img src="images/2025/2025-2.jpg" alt="2025"></div>
-                <div class="img-item"><img src="images/2025/2025-3.jpg" alt="2025"></div>
-                <div class="img-item"><img src="images/2025/2025-4.jpg" alt="2025"></div>
-                <div class="img-item"><img src="images/2025/2025-5.jpg" alt="2025"></div>
-                <div class="img-item"><img src="images/2025/2025-6.jpg" alt="2025"></div>
-                <div class="img-item"><img src="images/2025/2025-7.jpg" alt="2025"></div>
-                <div class="img-item"><img src="images/2025/2025-8.jpg" alt="2025"></div>
-                <div class="img-item"><img src="images/2025/2025-9.jpg" alt="2025"></div>
-                <div class="img-item"><img src="images/2025/2025-10.jpg" alt="2025"></div>
-                <div class="img-item"><img src="images/2025/2025-11.jpg" alt="2025"></div>
-                <div class="img-item"><img src="images/2025/2025-12.jpg" alt="2025"></div>
-                <div class="img-item"><img src="images/2025/2025-13.jpg" alt="2025"></div>
-                <div class="img-item"><img src="images/2025/2025-14.jpg" alt="2025"></div>
-                <div class="img-item"><img src="images/2025/2025-15.jpg" alt="2025"></div>
-                <div class="img-item"><img src="images/2025/2025-16.jpg" alt="2025"></div>
-                <div class="img-item"><img src="images/2025/2025-17.jpg" alt="2025"></div>
-                <div class="img-item"><img src="images/2025/2025-18.jpg" alt="2025"></div>
-            </div>
-        </div>
-        <!-- 2026年 -->
-        <div class="year-group">
-            <div class="year-badge">2026年</div>
-            <div class="img-grid">
-                <div class="img-item"><img src="images/2026/2026-1.jpg" alt="2026"></div>
-            </div>
+        <div id="dynamicGallery">
+            <p style="text-align:center; color:#999; margin-top: 50px;">☁️ 正在连接云端数据库...</p>
         </div>
     </section>
 
-    <!-- 3. 信件板块 -->
     <section id="letter" class="section content-section">
         <h2>致20岁的我们 ✉️</h2>
-        <div class="letter-paper" id="letterContent">
+        <!-- 信纸 -->
+        <div class="letter-paper">
 写给20岁的lhy:
 
 这是一封迟来了很久的生日信，但是还是来啦。
@@ -632,33 +339,39 @@
 
 
 ——20岁的张可妮
+
         </div>
     </section>
 
-    <!-- 4. 礼物/游戏板块 -->
     <section id="gift" class="section content-section">
         <h2>解锁礼物 🎁</h2>
         <div class="game-area">
-            <p class="game-tips">👇 翻开卡片，找到所有相同的图案，密码就会出现啦（是不是很好玩啊哈哈哈）</p>
-            
-            <!-- 游戏网格 -->
+            <p style="color:#666; margin-bottom: 20px;">👇 翻牌匹配相同图案，解锁礼物密码</p>
             <div class="memory-grid" id="memoryGrid"></div>
-            
-            <!-- 成功后的密码展示 -->
             <div class="gift-reveal" id="giftReveal">
-                <div class="password-card">
-                    <h3>🎉 恭喜通关！密码解锁成功</h3>
-                    <div class="password-code">520</div>
-                    <p>✨ 友谊长存，永远的基地 ✨</p>
-                </div>
-                <button class="music-btn" style="margin-top:20px;" onclick="resetGame()">再玩一次</button>
+                <p>🎉 成功啦！密码是：</p>
+                <div class="password-code">520</div>
+                <p>✨ 岁岁年年 ✨</p>
+                <button class="music-btn" onclick="resetGame()" style="margin-top:25px">再玩一次</button>
             </div>
         </div>
     </section>
 
     <script>
-        window.onload = function() {
-            // ================= 导航切换逻辑 =================
+        // ###############################################################
+        // 你的 Supabase 配置 (无需修改)
+        // ###############################################################
+        
+        let allPhotoUrls = []; 
+        let currentPhotoIndex = 0;
+        
+        const YOUR_SUPABASE_URL = 'https://xillvllktcsqrbhpuqvc.supabase.co';
+        const YOUR_SUPABASE_KEY = 'sb_publishable_vyU-iDtNjxc5-yIIs2pjHw_oyYJ4qPC';
+
+        // ###############################################################
+
+        window.addEventListener('DOMContentLoaded', () => {
+            // A. 导航切换
             const navLinks = document.querySelectorAll('.nav-item a');
             const sections = document.querySelectorAll('.section');
             const sliderImgs = document.querySelectorAll('.slider-img');
@@ -666,222 +379,283 @@
             let currentImgIndex = 0;
 
             function startSlider() {
+                if(sliderImgs.length === 0) return;
                 sliderImgs.forEach(img => img.style.display = 'none');
                 sliderImgs[currentImgIndex].style.display = 'block';
-                if (sliderInterval) clearInterval(sliderInterval);
+                stopSlider();
                 sliderInterval = setInterval(() => {
                     sliderImgs[currentImgIndex].style.display = 'none';
                     currentImgIndex = (currentImgIndex + 1) % sliderImgs.length;
                     sliderImgs[currentImgIndex].style.display = 'block';
                 }, 3000);
             }
-
-            function stopSlider() {
-                if (sliderInterval) clearInterval(sliderInterval);
-            }
+            function stopSlider() { if (sliderInterval) clearInterval(sliderInterval); }
 
             navLinks.forEach(link => {
                 link.addEventListener('click', (e) => {
                     e.preventDefault();
-                    navLinks.forEach(item => item.classList.remove('active'));
-                    sections.forEach(sec => sec.classList.remove('active'));
+                    navLinks.forEach(i => i.classList.remove('active'));
+                    sections.forEach(s => s.classList.remove('active'));
                     link.classList.add('active');
                     const targetId = link.getAttribute('data-target');
-                    document.getElementById(targetId).classList.add('active');
+                    const targetSection = document.getElementById(targetId);
+                    if(targetSection) targetSection.classList.add('active');
 
-                    if (targetId === 'home') {
-                        startSlider();
-                    } else {
-                        stopSlider();
-                    }
-                    window.scrollTo(0, 0);
+                    if (targetId === 'home') startSlider();
+                    else stopSlider();
                 });
             });
             startSlider();
 
-            // ================= 音乐播放逻辑 =================
+            // B. 音乐
             const playBtn = document.getElementById('playMusicBtn');
             const audio = document.getElementById('bgMusic');
             let isPlaying = false;
+            if(playBtn && audio) {
+                playBtn.addEventListener('click', () => {
+                    if (isPlaying) { audio.pause(); playBtn.textContent = '点点我吧 🎵'; isPlaying = false; }
+                    else { audio.play(); playBtn.textContent = '暂停播放 ⏸'; isPlaying = true; }
+                });
+            }
 
-            playBtn.addEventListener('click', () => {
-                if (isPlaying) {
-                    audio.pause();
-                    playBtn.textContent = '点点我吧 🎵';
-                    isPlaying = false;
-                } else {
-                    audio.play().then(() => {
-                        playBtn.textContent = '暂停播放 ⏸';
-                        isPlaying = true;
-                    }).catch(err => {
-                        alert("请再点击一次以播放音乐！");
+            // C. 游戏
+            initGame();
+
+            // D. 数据库
+            try {
+                if (!window.supabase) throw new Error("Supabase 未加载");
+                
+                const supabase = window.supabase.createClient(YOUR_SUPABASE_URL, YOUR_SUPABASE_KEY);
+                window.currentSupabase = supabase;
+
+                loadPhotos(supabase);
+
+                const fileInput = document.getElementById('uploadInput');
+                if(fileInput) {
+                    fileInput.addEventListener('change', (e) => {
+                        if (e.target.files.length > 0) uploadPhoto(supabase, e.target.files[0]);
                     });
                 }
-            });
-
-            // ================= 小游戏逻辑 =================
-            initGame();
-        };
-
-        const emojis = ['🧸', '🧸', '🎀', '🎀', '🍟', '🍟', '🎈', '🎈', '🍰', '🍰', '🎁', '🎁'];
-        let hasFlippedCard = false;
-        let lockBoard = false;
-        let firstCard, secondCard;
-        let matchCount = 0;
-
-        function initGame() {
-            const grid = document.getElementById('memoryGrid');
-            grid.innerHTML = ''; 
-            matchCount = 0;
-            document.getElementById('giftReveal').style.display = 'none';
-            document.getElementById('memoryGrid').style.display = 'grid';
-
-            emojis.sort(() => 0.5 - Math.random());
-
-            emojis.forEach(emoji => {
-                const card = document.createElement('div');
-                card.classList.add('memory-card');
-                card.dataset.framework = emoji;
-                card.innerHTML = `
-                    <div class="front-face">${emoji}</div>
-                    <div class="back-face"></div>
-                `;
-                card.addEventListener('click', flipCard);
-                grid.appendChild(card);
-            });
-        }
-
-        function flipCard() {
-            if (lockBoard) return;
-            if (this === firstCard) return;
-
-            this.classList.add('flip');
-
-            if (!hasFlippedCard) {
-                hasFlippedCard = true;
-                firstCard = this;
-                return;
+            } catch (err) {
+                console.error("数据库错误:", err);
+                document.getElementById('dynamicGallery').innerHTML = '<p style="text-align:center;color:red;padding:20px;">⚠️ 数据库连接异常</p>';
             }
+        });
 
-            secondCard = this;
-            checkForMatch();
-        }
-
-        function checkForMatch() {
-            let isMatch = firstCard.dataset.framework === secondCard.dataset.framework;
-            isMatch ? disableCards() : unflipCards();
-        }
-
-        function disableCards() {
-            firstCard.removeEventListener('click', flipCard);
-            secondCard.removeEventListener('click', flipCard);
-            resetBoard();
-            matchCount++;
-
-            if (matchCount === emojis.length / 2) {
-                // 增加延迟，让用户看完最后一次翻牌
-                setTimeout(() => {
-                    gameWin();
-                }, 800);
+        // ================= 相册函数 =================
+        async function loadPhotos(supabase) {
+            const gallery = document.getElementById('dynamicGallery');
+            const { data, error } = await supabase.from('photos').select('*').order('created_at', { ascending: false });
+            
+            if (error || !data) {
+                gallery.innerHTML = '<p style="text-align:center">加载失败，请刷新重试</p>'; return;
             }
-        }
-
-        function unflipCards() {
-            lockBoard = true;
-            setTimeout(() => {
-                firstCard.classList.remove('flip');
-                secondCard.classList.remove('flip');
-                resetBoard();
-            }, 1000);
-        }
-
-        function resetBoard() {
-            [hasFlippedCard, lockBoard] = [false, false];
-            [firstCard, secondCard] = [null, null];
-        }
-
-        function gameWin() {
-            document.getElementById('memoryGrid').style.display = 'none';
-            document.getElementById('giftReveal').style.display = 'block';
-            startFireworks();
-        }
-
-        function resetGame() {
-            stopFireworks();
-            initGame();
-        }
-
-        // ================= 彩带特效逻辑 (替换原有的烟花代码) =================
-        const canvas = document.getElementById('fireworksCanvas');
-        const ctx = canvas.getContext('2d');
-        let particles = [];
-        let animationId;
-
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
-
-        // 彩带粒子类
-        class Confetti {
-            constructor() {
-                this.x = Math.random() * canvas.width;
-                this.y = Math.random() * canvas.height - canvas.height;
-                this.size = Math.random() * 10 + 5;
-                this.color = `hsl(${Math.random() * 360}, 100%, 70%)`; // 糖果色系
-                this.speedY = Math.random() * 3 + 2; // 下落速度
-                this.speedX = Math.random() * 2 - 1; // 飘动幅度
-                this.rotation = Math.random() * 360;
-                this.rotationSpeed = Math.random() * 10 - 5;
+            if (data.length === 0) {
+                gallery.innerHTML = '<p style="text-align:center;color:#999;margin-top:20px;">相册是空的，上传第一张照片吧 📸</p>'; return;
             }
-            update() {
-                this.y += this.speedY;
-                this.x += this.speedX;
-                this.rotation += this.rotationSpeed;
+            
+            gallery.innerHTML = ''; 
+            
+            // 1. 重置全局相册数据
+            allPhotoUrls = []; 
+            let globalIndex = 0; // 用于给每张照片打上序号
+
+            const groups = {};
+            data.forEach(p => { const y = p.caption||'其它'; if(!groups[y]) groups[y]=[]; groups[y].push(p); });
+
+            // 按年份排序（大的在前）
+            Object.keys(groups).sort().reverse().forEach(year => {
+                const div = document.createElement('div');
+                div.innerHTML = `<div style="text-align:left"><div class="year-badge">${year}</div></div><div class="img-grid"></div>`;
+                const grid = div.querySelector('.img-grid');
                 
-                // 循环下落
-                if (this.y > canvas.height) {
-                    this.y = -10;
-                    this.x = Math.random() * canvas.width;
+                groups[year].forEach(photo => {
+                    // 2. 将 URL 加入全局数组
+                    allPhotoUrls.push(photo.url);
+
+                    const item = document.createElement('div');
+                    item.className = 'img-item';
+                    
+                    // 3. 修改 onclick，传入 globalIndex 而不是 url
+                    item.innerHTML = `
+                        <img src="${photo.url}" loading="lazy" onclick="openLightbox(${globalIndex})">
+                        <button class="delete-btn" onclick="deletePhoto('${photo.id}','${photo.url}', event)" title="删除照片">×</button>
+                    `;
+                    grid.appendChild(item);
+                    
+                    // 序号加1
+                    globalIndex++;
+                });
+                gallery.appendChild(div);
+            });
+        }
+
+        async function uploadPhoto(supabase, file) {
+            const status = document.getElementById('uploadStatus');
+            status.textContent = '⏳ 图片上传中...';
+            const fileName = `${Date.now()}_${Math.floor(Math.random()*9999)}`;
+            
+            const { error: upErr } = await supabase.storage.from('images').upload(fileName, file);
+            if (upErr) { status.textContent = '❌ 上传失败: ' + upErr.message; return; }
+            
+            const { data: { publicUrl } } = supabase.storage.from('images').getPublicUrl(fileName);
+            const year = document.getElementById('yearSelect').value;
+            const { error: dbErr } = await supabase.from('photos').insert([{ url: publicUrl, caption: year }]);
+            
+            if (dbErr) { status.textContent = '❌ 保存记录失败'; }
+            else { status.textContent = '✅ 上传成功！'; loadPhotos(supabase); }
+        }
+
+        async function deletePhoto(id, url, event) {
+            if(event) event.stopPropagation();
+            if(!confirm('确定要删除这张照片吗？')) return;
+            
+            const supabase = window.currentSupabase;
+            if(!supabase) return;
+            
+            const { error } = await supabase.from('photos').delete().eq('id', id);
+            if (!error) {
+                const fileName = url.split('/').pop();
+                await supabase.storage.from('images').remove([fileName]);
+                loadPhotos(supabase);
+            } else {
+                alert("删除失败");
+            }
+        }
+
+        // ================= 灯箱与键盘导航 =================
+        
+        // 打开灯箱，接收索引
+// ================= 灯箱与键盘导航 (修复版) =================
+        
+        function openLightbox(indexOrUrl) {
+            const lightbox = document.getElementById('lightbox');
+            const img = document.getElementById('lightbox-img');
+            
+            // 调试信息：可以在浏览器控制台看到具体传进来了什么
+            console.log("正在打开灯箱，传入参数:", indexOrUrl);
+            console.log("当前照片列表:", allPhotoUrls);
+
+            // 情况A：传入的是数字（说明 loadPhotos 更新成功了）
+            if (typeof indexOrUrl === 'number') {
+                currentPhotoIndex = indexOrUrl;
+                if (allPhotoUrls[indexOrUrl]) {
+                    img.src = allPhotoUrls[indexOrUrl];
+                } else {
+                    console.error("找不到这张照片的链接，索引:", indexOrUrl);
+                }
+            } 
+            // 情况B：传入的是链接字符串（说明还在用旧的 HTML，或者缓存没清）
+            else if (typeof indexOrUrl === 'string') {
+                img.src = indexOrUrl;
+                // 尝试反向查找这张图是列表里的第几张，为了让键盘能用
+                const foundIndex = allPhotoUrls.indexOf(indexOrUrl);
+                if (foundIndex !== -1) {
+                    currentPhotoIndex = foundIndex;
+                } else {
+                    // 如果列表里居然没有这张图，就手动把它加进去，防止报错
+                    allPhotoUrls.push(indexOrUrl);
+                    currentPhotoIndex = allPhotoUrls.length - 1;
                 }
             }
-            draw() {
-                ctx.save();
-                ctx.translate(this.x, this.y);
-                ctx.rotate(this.rotation * Math.PI / 180);
-                ctx.fillStyle = this.color;
-                ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size);
-                ctx.restore();
+
+            lightbox.classList.add('active');
+        }
+
+        // 关闭灯箱
+        function closeLightbox() {
+            document.getElementById('lightbox').classList.remove('active');
+            setTimeout(() => { document.getElementById('lightbox-img').src = ''; }, 300);
+        }
+
+        // 切换图片
+        function switchPhoto(direction) {
+            const newIndex = currentPhotoIndex + direction;
+            if (newIndex >= 0 && newIndex < allPhotoUrls.length) {
+                currentPhotoIndex = newIndex;
+                const img = document.getElementById('lightbox-img');
+                img.style.opacity = 0.5;
+                setTimeout(() => {
+                    img.src = allPhotoUrls[currentPhotoIndex];
+                    img.style.opacity = 1;
+                }, 100);
             }
         }
 
-        function animateFireworks() {
-            // 清除画布
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // 键盘监听
+        document.addEventListener('keydown', (e) => {
+            const lightbox = document.getElementById('lightbox');
+            if (!lightbox.classList.contains('active')) return;
+            if (e.key === 'ArrowLeft') switchPhoto(-1);
+            else if (e.key === 'ArrowRight') switchPhoto(1);
+            else if (e.key === 'Escape') closeLightbox();
+        });
 
-            for (let i = 0; i < particles.length; i++) {
-                particles[i].update();
-                particles[i].draw();
+        // ... (下面接原有的 // ================= 游戏 ================= 代码)
+
+        // ================= 游戏 =================
+        const emojis = ['🧸','🧸','🎀','🎀','🍟','🍟','🎈','🎈','🍰','🍰','🎁','🎁'];
+        let hasFlipped=false, lockBoard=false, first, second, matchCount=0;
+        
+        function initGame() {
+            const grid = document.getElementById('memoryGrid');
+            if(!grid) return;
+            grid.innerHTML = ''; matchCount=0;
+            document.getElementById('giftReveal').style.display='none';
+            document.getElementById('memoryGrid').style.display='grid';
+            emojis.sort(()=>0.5-Math.random()).forEach(e => {
+                const c = document.createElement('div');
+                c.className='memory-card'; c.dataset.fw=e;
+                c.innerHTML=`<div class="front-face">${e}</div><div class="back-face"></div>`;
+                c.addEventListener('click', flipCard);
+                grid.appendChild(c);
+            });
+        }
+        function flipCard() {
+            if(lockBoard || this===first) return;
+            this.classList.add('flip');
+            if(!hasFlipped) { hasFlipped=true; first=this; return; }
+            second=this; checkForMatch();
+        }
+        function checkForMatch() {
+            let isMatch = first.dataset.fw === second.dataset.fw;
+            isMatch ? disableCards() : unflipCards();
+        }
+        function disableCards() {
+            first.removeEventListener('click', flipCard); second.removeEventListener('click', flipCard);
+            resetBoard(); matchCount++;
+            if(matchCount === emojis.length/2) setTimeout(gameWin, 800);
+        }
+        function unflipCards() {
+            lockBoard=true;
+            setTimeout(() => { first.classList.remove('flip'); second.classList.remove('flip'); resetBoard(); }, 1000);
+        }
+        function resetBoard() { [hasFlipped, lockBoard]=[false, false]; [first, second]=[null, null]; }
+        function gameWin() {
+            document.getElementById('memoryGrid').style.display='none';
+            document.getElementById('giftReveal').style.display='block';
+            startFireworks();
+        }
+        function resetGame() { stopFireworks(); initGame(); }
+
+        // ================= 烟花 =================
+        const canvas = document.getElementById('fireworksCanvas');
+        const ctx = canvas.getContext('2d');
+        let particles=[], animationId;
+        function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        window.addEventListener('resize', resizeCanvas); resizeCanvas();
+        class Confetti {
+            constructor() {
+                this.x = Math.random()*canvas.width; this.y = Math.random()*canvas.height - canvas.height;
+                this.size = Math.random()*12+6; this.color = `hsl(${Math.random()*360}, 100%, 75%)`;
+                this.speedY = Math.random()*3+2; this.speedX = Math.random()*2-1; this.rot = Math.random()*360;
             }
-            animationId = requestAnimationFrame(animateFireworks);
+            update() { this.y+=this.speedY; this.x+=this.speedX; this.rot+=5; if(this.y>canvas.height) this.y=-20; }
+            draw() { ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(this.rot*Math.PI/180); ctx.fillStyle=this.color; ctx.fillRect(-this.size/2,-this.size/2,this.size,this.size); ctx.restore(); }
         }
-
-        function startFireworks() {
-            particles = [];
-            // 生成150个彩带
-            for (let i = 0; i < 150; i++) {
-                particles.push(new Confetti());
-            }
-            animateFireworks();
-        }
-
-        function stopFireworks() {
-            cancelAnimationFrame(animationId);
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            particles = [];
-        }
+        function startFireworks() { particles=[]; for(let i=0; i<120; i++) particles.push(new Confetti()); animate(); }
+        function animate() { ctx.clearRect(0,0,canvas.width,canvas.height); particles.forEach(p=>{p.update();p.draw();}); animationId=requestAnimationFrame(animate); }
+        function stopFireworks() { cancelAnimationFrame(animationId); ctx.clearRect(0,0,canvas.width,canvas.height); }
     </script>
 </body>
 </html>
