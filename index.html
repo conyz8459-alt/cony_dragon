@@ -182,6 +182,75 @@
         .letter-paper { padding: 30px; font-size: 1rem; line-height: 2em; background-size: 100% 2em; }
         .slider-text { font-size: 2rem; }
     }
+
+    /* ================= 留言板样式 ================= */
+    .message-form-card {
+        background: white;
+        padding: 25px;
+        border-radius: 20px;
+        box-shadow: var(--shadow);
+        margin-bottom: 40px;
+        border: 2px dashed #eee;
+    }
+    
+    .message-form-card textarea {
+        width: 100%;
+        border: 1px solid #eee;
+        border-radius: 10px;
+        padding: 15px;
+        font-family: inherit;
+        font-size: 1rem;
+        resize: vertical;
+        outline: none;
+        transition: 0.3s;
+        background: #fafafa;
+    }
+    .message-form-card textarea:focus { background: white; border-color: var(--primary-color); }
+
+    .form-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; }
+    
+    .icon-btn { background: #f0f0f0; border: none; padding: 8px 15px; border-radius: 20px; cursor: pointer; color: #555; transition: 0.2s; }
+    .icon-btn:hover { background: #e0e0e0; }
+    
+    .send-btn { padding: 8px 25px; font-size: 0.9rem; }
+
+    /* 便利贴布局 */
+    .message-grid-layout {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 20px;
+    }
+
+    .message-card {
+        background: white;
+        padding: 20px;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        transition: transform 0.3s;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+    }
+    .message-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
+
+    .msg-header { display: flex; align-items: center; margin-bottom: 10px; }
+    .msg-avatar { 
+        width: 35px; height: 35px; border-radius: 50%; 
+        background: var(--primary-color); color: white;
+        display: flex; align-items: center; justify-content: center;
+        font-weight: bold; margin-right: 10px; font-size: 0.9rem;
+    }
+    .msg-info { font-size: 0.8rem; color: #999; }
+    .msg-name { font-weight: bold; color: #333; font-size: 0.95rem; }
+    
+    .msg-body { font-size: 1rem; color: #444; line-height: 1.6; white-space: pre-wrap; word-wrap: break-word; }
+    .msg-img { width: 100%; border-radius: 10px; margin-top: 10px; cursor: zoom-in; object-fit: cover; }
+    
+    .msg-delete { 
+        position: absolute; top: 15px; right: 15px; 
+        color: #ddd; cursor: pointer; font-size: 1.2rem; 
+    }
+    .msg-delete:hover { color: #ff4757; }
     </style>
 </head>
 <body>
@@ -202,6 +271,8 @@
                     <li class="nav-item"><a href="#collection" data-target="collection">收集箱</a></li>
                     <li class="nav-item"><a href="#letter" data-target="letter">20岁的信</a></li>
                     <li class="nav-item"><a href="#gift" data-target="gift">解锁礼物</a></li>
+                    <!-- 找到 <ul class="nav-list">，在“解锁礼物”后面加这一行 -->
+                    <li class="nav-item"><a href="#message-board" data-target="message-board">留言板</a></li>
                 </ul>
             </nav>
         </div>
@@ -357,6 +428,42 @@
         </div>
     </section>
 
+    <!-- 留言板板块 -->
+    <section id="message-board" class="section content-section">
+        <h2>心情便利贴 📝</h2>
+        
+        <!-- 留言输入区 -->
+        <div class="message-form-card">
+            <div style="margin-bottom: 15px;">
+                <label style="margin-right: 10px; font-weight:bold;">我是：</label>
+                <select id="msg-nickname" style="padding: 5px 10px; border-radius: 15px; border: 1px solid #ddd;">
+                    <option value="lhy">lhy 👦🏻</option>
+                    <option value="zkn">zkn 👧🏻</option>
+                </select>
+            </div>
+            
+            <textarea id="msg-content" placeholder="今天发生了什么有趣的？或者单纯想贴张图？" rows="3"></textarea>
+            
+            <div class="form-footer">
+                <!-- 图片上传按钮 -->
+                <div class="file-upload-wrapper">
+                    <input type="file" id="msg-image-input" accept="image/*" style="display: none;" onchange="previewMsgImage(this)">
+                    <button class="icon-btn" onclick="document.getElementById('msg-image-input').click()">📷 添加照片</button>
+                    <span id="msg-file-name" style="font-size: 0.8rem; color: #888; margin-left: 10px;"></span>
+                </div>
+                
+                <button class="music-btn send-btn" onclick="submitMessage()">✨ 贴上去</button>
+            </div>
+            <!-- 图片预览区 -->
+            <img id="msg-preview" src="" style="display:none; max-height: 100px; margin-top: 10px; border-radius: 8px;">
+        </div>
+
+        <!-- 留言展示区 (瀑布流/便利贴效果) -->
+        <div id="message-container" class="message-grid-layout">
+            <p style="text-align:center; width:100%; color:#999;">正在读取留言...</p>
+        </div>
+    </section>
+
     <script>
         // ###############################################################
         // 你的 Supabase 配置 (无需修改)
@@ -421,15 +528,25 @@
             // C. 游戏
             initGame();
 
-            // D. 数据库
+            // D. 数据库连接
             try {
                 if (!window.supabase) throw new Error("Supabase 未加载");
                 
+                // 1. 先创建 Supabase 实例 (拿到钥匙)
                 const supabase = window.supabase.createClient(YOUR_SUPABASE_URL, YOUR_SUPABASE_KEY);
-                window.currentSupabase = supabase;
+                
+                // 2. 【关键】立刻把它挂到 window 上 (放进全局工具箱)
+                // 这行必须在 loadMessages() 之前！！！
+                window.currentSupabase = supabase; 
 
+                // 3. 然后再加载照片
                 loadPhotos(supabase);
 
+                // 4. 最后再加载留言
+                // 现在的 loadMessages 依赖上面的 window.currentSupabase，所以必须放在第 2 步之后
+                loadMessages(); 
+
+                // 绑定上传事件
                 const fileInput = document.getElementById('uploadInput');
                 if(fileInput) {
                     fileInput.addEventListener('change', (e) => {
@@ -438,7 +555,7 @@
                 }
             } catch (err) {
                 console.error("数据库错误:", err);
-                document.getElementById('dynamicGallery').innerHTML = '<p style="text-align:center;color:red;padding:20px;">⚠️ 数据库连接异常</p>';
+                // ...
             }
         });
 
@@ -656,6 +773,141 @@
         function startFireworks() { particles=[]; for(let i=0; i<120; i++) particles.push(new Confetti()); animate(); }
         function animate() { ctx.clearRect(0,0,canvas.width,canvas.height); particles.forEach(p=>{p.update();p.draw();}); animationId=requestAnimationFrame(animate); }
         function stopFireworks() { cancelAnimationFrame(animationId); ctx.clearRect(0,0,canvas.width,canvas.height); }
+        // F. 留言板逻辑
+        const msgContainer = document.getElementById('message-container');
+            
+            // 1. 加载留言
+            async function loadMessages() {
+                // 读取 Supabase 数据
+                const { data, error } = await window.currentSupabase
+                    .from('messages')
+                    .select('*')
+                    .order('created_at', { ascending: false }); // 最新的在前面
+
+                if (error) {
+                    console.error(error);
+                    msgContainer.innerHTML = '<p>加载失败了 :(</p>';
+                    return;
+                }
+
+                msgContainer.innerHTML = ''; // 清空
+                
+                if (data.length === 0) {
+                    msgContainer.innerHTML = '<p style="text-align:center; width:100%; color:#aaa;">还没有留言，贴第一张便利贴吧 📝</p>';
+                    return;
+                }
+
+                data.forEach(msg => {
+                    const card = document.createElement('div');
+                    card.className = 'message-card';
+                    
+                    // 格式化时间 (例如: 01/25 14:30)
+                    const date = new Date(msg.created_at);
+                    const timeStr = `${date.getMonth()+1}/${date.getDate()} ${date.getHours().toString().padStart(2,'0')}:${date.getMinutes().toString().padStart(2,'0')}`;
+                    
+                    // 判断头像颜色
+                    const avatarColor = msg.nickname === 'lhy' ? '#7bed9f' : '#ff6b81'; 
+
+                    // 构建卡片 HTML
+                    let html = `
+                        <div class="msg-delete" onclick="deleteMessage(${msg.id})">×</div>
+                        <div class="msg-header">
+                            <div class="msg-avatar" style="background:${avatarColor}">${msg.nickname[0].toUpperCase()}</div>
+                            <div>
+                                <div class="msg-name">${msg.nickname}</div>
+                                <div class="msg-info">${timeStr}</div>
+                            </div>
+                        </div>
+                        <div class="msg-body">${msg.content || ''}</div>
+                    `;
+
+                    // 如果有图，加上图
+                    if (msg.image_url) {
+                        html += `<img src="${msg.image_url}" class="msg-img" onclick="openLightbox('${msg.image_url}')">`;
+                    }
+
+                    card.innerHTML = html;
+                    msgContainer.appendChild(card);
+                });
+            }
+
+            // 2. 发送留言
+            window.submitMessage = async function() {
+                const nickname = document.getElementById('msg-nickname').value;
+                const content = document.getElementById('msg-content').value;
+                const fileInput = document.getElementById('msg-image-input');
+                const btn = document.querySelector('.send-btn');
+                
+                if (!content && fileInput.files.length === 0) {
+                    alert("写点什么或者发张图吧！"); return;
+                }
+
+                btn.textContent = "发送中...";
+                btn.disabled = true;
+
+                let imageUrl = null;
+
+                try {
+                    // 如果有图，先传图
+                    if (fileInput.files.length > 0) {
+                        const file = fileInput.files[0];
+                        const fileName = `msg_${Date.now()}_${Math.floor(Math.random()*999)}`;
+                        const { error: upErr } = await window.currentSupabase.storage.from('images').upload(fileName, file);
+                        if (upErr) throw upErr;
+                        
+                        const { data } = window.currentSupabase.storage.from('images').getPublicUrl(fileName);
+                        imageUrl = data.publicUrl;
+                    }
+
+                    // 存入数据库
+                    const { error: dbErr } = await window.currentSupabase.from('messages').insert([{
+                        nickname: nickname,
+                        content: content,
+                        image_url: imageUrl
+                    }]);
+
+                    if (dbErr) throw dbErr;
+
+                    // 成功后重置表单
+                    document.getElementById('msg-content').value = '';
+                    fileInput.value = '';
+                    document.getElementById('msg-preview').style.display = 'none';
+                    document.getElementById('msg-file-name').textContent = '';
+                    
+                    loadMessages(); // 刷新列表
+
+                } catch (err) {
+                    alert("发送失败: " + err.message);
+                } finally {
+                    btn.textContent = "✨ 贴上去";
+                    btn.disabled = false;
+                }
+            };
+
+            // 3. 图片预览小功能
+            window.previewMsgImage = function(input) {
+                if (input.files && input.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const img = document.getElementById('msg-preview');
+                        img.src = e.target.result;
+                        img.style.display = 'block';
+                    }
+                    reader.readAsDataURL(input.files[0]);
+                    document.getElementById('msg-file-name').textContent = '已选择图片';
+                }
+            };
+
+            // 4. 删除留言
+            window.deleteMessage = async function(id) {
+                if(!confirm("确定撕掉这张便利贴吗？")) return;
+                const { error } = await window.currentSupabase.from('messages').delete().eq('id', id);
+                if (!error) loadMessages();
+            };
+
+            // 初始加载
+            loadMessages();
+        // ================= 留言板 =================
     </script>
 </body>
 </html>
